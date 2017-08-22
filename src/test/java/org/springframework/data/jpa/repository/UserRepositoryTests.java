@@ -163,11 +163,6 @@ public class UserRepositoryTests {
 	}
 
 	@Test
-	public void savingNullCollectionIsNoOp() throws Exception {
-		assertThat(repository.saveAll(null)).isEmpty();
-	}
-
-	@Test
 	public void savingEmptyCollectionIsNoOp() throws Exception {
 		assertThat(repository.saveAll(new ArrayList<>())).isEmpty();
 	}
@@ -537,7 +532,7 @@ public class UserRepositoryTests {
 	public void returnsSameListIfNoSortIsGiven() throws Exception {
 
 		flushTestUsers();
-		assertSameElements(repository.findAll((Sort) null), repository.findAll());
+		assertSameElements(repository.findAll(Sort.unsorted()), repository.findAll());
 	}
 
 	@Test
@@ -553,7 +548,7 @@ public class UserRepositoryTests {
 	public void returnsAllAsPageIfNoPageableIsGiven() throws Exception {
 
 		flushTestUsers();
-		assertThat(repository.findAll((Pageable) null)).isEqualTo(new PageImpl<User>(repository.findAll()));
+		assertThat(repository.findAll(Pageable.unpaged())).isEqualTo(new PageImpl<>(repository.findAll()));
 	}
 
 	@Test
@@ -570,7 +565,7 @@ public class UserRepositoryTests {
 	@Test
 	public void executesPagedSpecificationsCorrectly() throws Exception {
 
-		Page<User> result = executeSpecWithSort(null);
+		Page<User> result = executeSpecWithSort(Sort.unsorted());
 		assertThat(result.getContent()).isSubsetOf(firstUser, thirdUser);
 	}
 
@@ -759,17 +754,17 @@ public class UserRepositoryTests {
 	}
 
 	@Test // DATAJPA-201
-	public void allowsExecutingPageableMethodWithNullPageable() {
+	public void allowsExecutingPageableMethodWithUnpagedArgument() {
 
 		flushTestUsers();
 
 		assertThat(repository.findByFirstname("Oliver", null)).containsOnly(firstUser);
 
-		Page<User> page = repository.findByFirstnameIn(null, "Oliver");
+		Page<User> page = repository.findByFirstnameIn(Pageable.unpaged(), "Oliver");
 		assertThat(page.getNumberOfElements()).isEqualTo(1);
 		assertThat(page.getContent()).contains(firstUser);
 
-		page = repository.findAll((Pageable) null);
+		page = repository.findAll(Pageable.unpaged());
 		assertThat(page.getNumberOfElements()).isEqualTo(4);
 		assertThat(page.getContent()).contains(firstUser, secondUser, thirdUser, fourthUser);
 	}
@@ -869,6 +864,7 @@ public class UserRepositoryTests {
 		flushTestUsers();
 
 		Page<User> page = repository.findAll(new Specification<User>() {
+			@Override
 			public Predicate toPredicate(Root<User> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
 				return cb.equal(root.get("lastname"), "Gierke");
 			}
@@ -942,11 +938,10 @@ public class UserRepositoryTests {
 		assertThat(repository.existsByLastname("Hans Peter")).isEqualTo(false);
 	}
 
-	@Test // DATAJPA-332
+	@Test // DATAJPA-332, DATAJPA-1168
 	public void findAllReturnsEmptyIterableIfNoIdsGiven() {
 
 		assertThat(repository.findAllById(Collections.<Integer> emptySet())).isEmpty();
-		assertThat(repository.findAllById((Iterable<Integer>) null)).isEmpty();
 	}
 
 	@Test // DATAJPA-391
@@ -1172,7 +1167,7 @@ public class UserRepositoryTests {
 
 		flushTestUsers();
 
-		List<User> result = repository.findByAttributesIn(new HashSet<String>(Arrays.asList("cool", "hip")));
+		List<User> result = repository.findByAttributesIn(new HashSet<>(Arrays.asList("cool", "hip")));
 
 		assertThat(result).containsOnly(firstUser, secondUser);
 	}
@@ -1231,7 +1226,7 @@ public class UserRepositoryTests {
 
 		flushTestUsers();
 
-		byte[] result = null; // repository.findBinaryDataByIdJpaQl(firstUser.getId());
+		byte[] result = repository.findBinaryDataByIdNative(firstUser.getId());
 
 		assertThat(result.length).isEqualTo(data.length);
 		assertThat(result).isEqualTo(data);
@@ -1641,7 +1636,7 @@ public class UserRepositoryTests {
 
 		Stream<User> stream = repository.findAllByCustomQueryAndStream();
 
-		final List<User> users = new ArrayList<User>();
+		final List<User> users = new ArrayList<>();
 
 		try {
 
@@ -1667,7 +1662,7 @@ public class UserRepositoryTests {
 
 		Stream<User> stream = repository.readAllByFirstnameNotNull();
 
-		final List<User> users = new ArrayList<User>();
+		final List<User> users = new ArrayList<>();
 
 		try {
 
@@ -1693,7 +1688,7 @@ public class UserRepositoryTests {
 
 		Stream<User> stream = repository.streamAllPaged(PageRequest.of(0, 2));
 
-		final List<User> users = new ArrayList<User>();
+		final List<User> users = new ArrayList<>();
 
 		try {
 

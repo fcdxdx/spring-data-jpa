@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2014 the original author or authors.
+ * Copyright 2008-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -31,19 +32,20 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 public class Specifications<T> implements Specification<T>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private final Specification<T> spec;
+	private final @Nullable Specification<T> spec;
 
 	/**
 	 * Creates a new {@link Specifications} wrapper for the given {@link Specification}.
 	 * 
 	 * @param spec can be {@literal null}.
 	 */
-	private Specifications(Specification<T> spec) {
+	private Specifications(@Nullable Specification<T> spec) {
 		this.spec = spec;
 	}
 
@@ -54,7 +56,7 @@ public class Specifications<T> implements Specification<T>, Serializable {
 	 * @param spec can be {@literal null}.
 	 * @return
 	 */
-	public static <T> Specifications<T> where(Specification<T> spec) {
+	public static <T> Specifications<T> where(@Nullable Specification<T> spec) {
 		return new Specifications<T>(spec);
 	}
 
@@ -65,7 +67,7 @@ public class Specifications<T> implements Specification<T>, Serializable {
 	 * @param other can be {@literal null}.
 	 * @return
 	 */
-	public Specifications<T> and(Specification<T> other) {
+	public Specifications<T> and(@Nullable Specification<T> other) {
 		return new Specifications<T>(new ComposedSpecification<T>(spec, other, AND));
 	}
 
@@ -76,7 +78,7 @@ public class Specifications<T> implements Specification<T>, Serializable {
 	 * @param other can be {@literal null}.
 	 * @return
 	 */
-	public Specifications<T> or(Specification<T> other) {
+	public Specifications<T> or(@Nullable Specification<T> other) {
 		return new Specifications<T>(new ComposedSpecification<T>(spec, other, OR));
 	}
 
@@ -87,7 +89,7 @@ public class Specifications<T> implements Specification<T>, Serializable {
 	 * @param spec can be {@literal null}.
 	 * @return
 	 */
-	public static <T> Specifications<T> not(Specification<T> spec) {
+	public static <T> Specifications<T> not(@Nullable Specification<T> spec) {
 		return new Specifications<T>(new NegatedSpecification<T>(spec));
 	}
 
@@ -95,6 +97,7 @@ public class Specifications<T> implements Specification<T>, Serializable {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.jpa.domain.Specification#toPredicate(javax.persistence.criteria.Root, javax.persistence.criteria.CriteriaQuery, javax.persistence.criteria.CriteriaBuilder)
 	 */
+	@Nullable
 	public Predicate toPredicate(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
 		return spec == null ? null : spec.toPredicate(root, query, builder);
 	}
@@ -133,14 +136,14 @@ public class Specifications<T> implements Specification<T>, Serializable {
 
 		private static final long serialVersionUID = 1L;
 
-		private final Specification<T> spec;
+		private final @Nullable Specification<T> spec;
 
 		/**
 		 * Creates a new {@link NegatedSpecification} from the given {@link Specification}
 		 * 
-		 * @param spec may be {@iteral null}
+		 * @param spec may be {@literal null}
 		 */
-		public NegatedSpecification(Specification<T> spec) {
+		public NegatedSpecification(@Nullable Specification<T> spec) {
 			this.spec = spec;
 		}
 
@@ -159,19 +162,20 @@ public class Specifications<T> implements Specification<T>, Serializable {
 
 		private static final long serialVersionUID = 1L;
 
-		private final Specification<T> lhs;
-		private final Specification<T> rhs;
+		private final @Nullable Specification<T> lhs;
+		private final @Nullable Specification<T> rhs;
 		private final CompositionType compositionType;
 
 		/**
 		 * Creates a new {@link ComposedSpecification} from the given {@link Specification} for the left-hand-side and the
 		 * right-hand-side with the given {@link CompositionType}.
 		 * 
-		 * @param lhs may be {@literal null}
-		 * @param rhs may be {@literal null}
+		 * @param lhs may be {@literal null}.
+		 * @param rhs may be {@literal null}.
 		 * @param compositionType must not be {@literal null}
 		 */
-		private ComposedSpecification(Specification<T> lhs, Specification<T> rhs, CompositionType compositionType) {
+		private ComposedSpecification(@Nullable Specification<T> lhs, @Nullable Specification<T> rhs,
+				CompositionType compositionType) {
 
 			Assert.notNull(compositionType, "CompositionType must not be null!");
 
