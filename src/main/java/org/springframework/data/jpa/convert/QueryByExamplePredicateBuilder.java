@@ -214,7 +214,7 @@ public class QueryByExamplePredicateBuilder {
 			this.value = value;
 		}
 
-		PathNode add(String attribute, Object value) {
+		PathNode add(String attribute, @Nullable Object value) {
 
 			PathNode node = new PathNode(attribute, this, value);
 			siblings.add(node);
